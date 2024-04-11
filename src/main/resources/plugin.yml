@@ -1,0 +1,11 @@
+name: build_and_guess
+version: '${version}'
+main: org.mick.build_and_guess.Build_and_guess
+api-version: '1.20'
+
+commands:
+  chat_manger:
+    description: 打开聊天
+    usage: /<command>
+
+

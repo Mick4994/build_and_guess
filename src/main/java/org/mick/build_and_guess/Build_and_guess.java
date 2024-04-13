@@ -11,6 +11,9 @@ import org.mick.build_and_guess.events.ChatHandler;
 import org.mick.build_and_guess.events.CommandWatcher;
 import org.bukkit.command.CommandException;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -23,6 +26,16 @@ public final class Build_and_guess extends JavaPlugin {
     public Server server = this.getServer();
 
     public Logger logger = this.getLogger();
+
+    public File file = this.getDataFolder();
+
+    public boolean inGame = false;
+
+    public void connectSQLite() throws Exception{
+        Connection c = null;
+        Class.forName("org.sqlite.JDBC");
+        c = DriverManager.getConnection("jdbc:sqlite:test.db");
+    }
 
     /**
      * 指令执行器: 对终端指令执行入口进行的封装
@@ -47,9 +60,13 @@ public final class Build_and_guess extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(commandWatcher, this);
 
         Objects.requireNonNull(this.getCommand("chat_manger")).setExecutor(this);
-        boolean found = commandExecutor("say Build and Guess Plugin on!");
-        logger.info("commandExecutor:" + found);
+        logger.info("Plugin's path: " + file.getAbsolutePath());
 
+        try {
+            connectSQLite();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -63,36 +80,69 @@ public final class Build_and_guess extends JavaPlugin {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
-        if(!label.equalsIgnoreCase("chat_manger")){
-            logger.info("command" + command.getName());
-            return false;
-        }
+        if(label.equalsIgnoreCase("chat_manger")) {
 
-        // 仅控制台指令
-        if(sender instanceof ConsoleCommandSender) {
-            if(args.length != 1) {
+            // 仅控制台指令
+            if (!(sender instanceof ConsoleCommandSender)) {
+                sender.sendMessage("Only use in console command");
+                return false;
+            }
+
+            if (args.length != 1) {
                 sender.sendMessage("error args num");
                 return false;
             }
 
             // 参数决定聊天是否开启
-            switch (args[0]){
+            switch (args[0]) {
                 case "on":
                     this.chatHandler.setChatEnabled(true);
                     sender.sendMessage("set chat on now");
-                    break;
+                    return true;
                 case "off":
                     this.chatHandler.setChatEnabled(false);
                     sender.sendMessage("set chat off now");
-                    break;
+                    return true;
                 default:
                     sender.sendMessage("error arg");
-                    break;
+                    return false;
             }
-        } else {
-            sender.sendMessage("Only use in console command");
         }
-        return true;
+
+        if(label.equalsIgnoreCase("start")){
+            if (args.length > 0) {
+                sender.sendMessage("error args num");
+                return false;
+            }
+
+            boolean success = commandExecutor("function building_and_guessing:start");
+            if(success) {
+                inGame = true;
+                logger.info("game start!");
+                return true;
+            } else {
+                sender.sendMessage("start failed, please check start function");
+            }
+            return false;
+        }
+
+        if(label.equalsIgnoreCase("left")){
+            if (args.length != 1) {
+                sender.sendMessage("error args num");
+                return false;
+            }
+
+            boolean success = commandExecutor("scoreboard players set time_left building_and_guessing_time_left " + args[0]);
+            if(success) {
+                String msg = "adjust time left to " + args[0];
+                logger.info(msg);
+                sender.sendMessage(msg);
+                return true;
+            }
+        }
+
+        logger.info("Unknown command" + command.getName());
+        return false;
     }
 
     @Override

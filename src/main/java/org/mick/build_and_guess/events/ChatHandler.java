@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 public class ChatHandler implements Listener {
 
     private volatile boolean chatEnabled = true;
-    private HttpURLConnection request;
     private final Logger logger;
     private final Server server;
     private final Build_and_guess plugin;
@@ -32,13 +31,6 @@ public class ChatHandler implements Listener {
         });
     }
 
-    private void sendGuessWord(String word, String playerName) throws IOException {
-        URL url = new URL("http://localhost:5994/guess?word=" + word + "&player=" + playerName);
-        request = (HttpURLConnection) url.openConnection();
-        request.setRequestMethod("GET");
-        request.connect();
-    }
-
     public void setChatEnabled(boolean chatEnabled) {
         this.chatEnabled = chatEnabled;
     }
@@ -51,7 +43,6 @@ public class ChatHandler implements Listener {
                 commandExecutor(message.substring(1));
             }
             logger.info(message);
-            sendGuessWord(message, event.getPlayer().getName());
             event.setCancelled(true);
         }
     }

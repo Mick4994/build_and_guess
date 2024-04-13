@@ -8,4 +8,10 @@ commands:
     description: 打开聊天
     usage: /<command>
 
+  start:
+    description: 开始建筑猜猜乐游戏
+    usage: /<command>
 
+  left:
+    description: 调整剩余时间
+    usage: /<command>

@@ -24,6 +24,7 @@ public class CommandWatcher implements Listener {
 
     @EventHandler
     public void onServerCommandEvent(ServerCommandEvent event) {
-        logger.info("onCommand: " + event.getCommand());
+        String commandLine = event.getCommand();
+        logger.info("onCommand: " + commandLine);
     }
 }

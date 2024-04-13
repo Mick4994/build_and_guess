@@ -12,30 +12,18 @@ import org.mick.build_and_guess.events.CommandWatcher;
 import org.bukkit.command.CommandException;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Objects;
 import java.util.logging.Logger;
 
 public final class Build_and_guess extends JavaPlugin {
 
     public ChatHandler chatHandler;
-
     public CommandWatcher commandWatcher;
-
     public Server server = this.getServer();
-
     public Logger logger = this.getLogger();
-
     public File file = this.getDataFolder();
-
     public boolean inGame = false;
-
-    public void connectSQLite() throws Exception{
-        Connection c = null;
-        Class.forName("org.sqlite.JDBC");
-        c = DriverManager.getConnection("jdbc:sqlite:test.db");
-    }
 
     /**
      * 指令执行器: 对终端指令执行入口进行的封装
@@ -63,8 +51,8 @@ public final class Build_and_guess extends JavaPlugin {
         logger.info("Plugin's path: " + file.getAbsolutePath());
 
         try {
-            connectSQLite();
-        } catch (Exception e) {
+            new GameRound(this).runTaskTimer(this, 0, 0);
+        } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
@@ -110,6 +98,11 @@ public final class Build_and_guess extends JavaPlugin {
         }
 
         if(label.equalsIgnoreCase("start")){
+            if(inGame) {
+                sender.sendMessage("The game is in progress");
+                return true;
+            }
+
             if (args.length > 0) {
                 sender.sendMessage("error args num");
                 return false;

@@ -35,6 +35,7 @@ public class GameRound extends BukkitRunnable {
             if(havePrint) havePrint = false;
             int timeLeft = this.plugin.chatHandler.getTimeLeft();
             if(timeLeft == 2399) {
+                plugin.chatHandler.guessCounter = 0;
                 this.plugin.chatHandler.setGuessWord("你好");
                 this.plugin.commandExecutor("say setGuessWord!");
             }

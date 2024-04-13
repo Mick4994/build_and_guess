@@ -20,7 +20,7 @@ public class ChatHandler implements Listener {
     private final Server server;
     private final Build_and_guess plugin;
     private final int[] timeLeftArray = {1200, 600, 300, 200, 1};
-    private int guessCounter = 0;
+    public int guessCounter = 0;
     private String guessWord;
 
     public ChatHandler(Logger logger, Server server, Build_and_guess plugin) {
@@ -72,8 +72,8 @@ public class ChatHandler implements Listener {
                         commandExecutor("scoreboard players set time_left building_and_guessing_time_left " + timeLeft);
                         guessCounter += 1;
                     }
-                    if(guessCounter >= server.getOnlinePlayers().size()) {
-                        commandExecutor("scoreboard players set time_left building_and_guessing_time_left 1");
+                    if(guessCounter >= server.getOnlinePlayers().size() - 1) {
+                        commandExecutor("scoreboard players set time_left building_and_guessing_time_left 60");
                     }
                     event.setMessage("猜中了！");
                 }

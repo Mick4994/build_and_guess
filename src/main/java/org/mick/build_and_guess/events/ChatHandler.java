@@ -19,9 +19,11 @@ public class ChatHandler implements Listener {
     private final Logger logger;
     private final Server server;
     private final Build_and_guess plugin;
-    private final int[] timeLeftArray = {1200, 600, 300, 200, 1};
+    private final int[] timeLeftArray = {1800, 600, 300, 200, 1};
     public int guessCounter = 0;
-    private String guessWord;
+    public String guessWord;
+    public int haveGuessCount = 0;
+    public String unguess_word = "";
 
     public ChatHandler(Logger logger, Server server, Build_and_guess plugin) {
         this.logger = logger;
@@ -81,7 +83,22 @@ public class ChatHandler implements Listener {
         }
     }
 
+    public void showRandomWord() {
+        if(haveGuessCount < unguess_word.length()) {
+            int index = (int)(Math.random() * unguess_word.length());
+            char[] unguess_word_array = unguess_word.toCharArray();
+            unguess_word_array[index] = guessWord.charAt(index);
+            unguess_word = new String(unguess_word_array);
+            haveGuessCount += 1;
+        }
+    }
+
     public void setGuessWord(String guessWord) {
         this.guessWord = guessWord;
+        this.unguess_word = "";
+        this.haveGuessCount = 0;
+        for(char word : this.guessWord.toCharArray()) {
+            this.unguess_word += '_';
+        }
     }
 }

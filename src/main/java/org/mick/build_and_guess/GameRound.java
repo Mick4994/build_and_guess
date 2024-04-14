@@ -72,6 +72,16 @@ public class GameRound extends BukkitRunnable {
             if(timeLeft == 2399) {
                 plugin.chatHandler.guessCounter = 0;
                 setGuessWord();
+            } else if (timeLeft > 0) {
+                this.plugin.commandExecutor("title @p[tag=building] actionbar {\"text\":\"" + this.plugin.chatHandler.guessWord + "\",\"bold\":true}");
+                this.plugin.commandExecutor("title @p[tag=correct_guessed] actionbar {\"text\":\"" + this.plugin.chatHandler.guessWord + "\",\"bold\":true}");
+                this.plugin.commandExecutor("title @p[tag=!building] actionbar {\"text\":\"" + this.plugin.chatHandler.unguess_word + "\",\"bold\":true}");
+                if (timeLeft == 290) {
+                    this.plugin.chatHandler.showRandomWord();
+                }
+                if (timeLeft < 2000 && this.plugin.chatHandler.haveGuessCount == 0) {
+                    this.plugin.chatHandler.showRandomWord();
+                }
             }
         }
 

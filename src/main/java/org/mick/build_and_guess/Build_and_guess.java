@@ -22,7 +22,6 @@ public final class Build_and_guess extends JavaPlugin {
     public CommandWatcher commandWatcher;
     public Server server = this.getServer();
     public Logger logger = this.getLogger();
-    public File file = this.getDataFolder();
     public boolean inGame = false;
 
     /**
@@ -48,7 +47,6 @@ public final class Build_and_guess extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(commandWatcher, this);
 
         Objects.requireNonNull(this.getCommand("chat_manger")).setExecutor(this);
-        logger.info("Plugin's path: " + file.getAbsolutePath());
 
         try {
             new GameRound(this).runTaskTimer(this, 0, 0);

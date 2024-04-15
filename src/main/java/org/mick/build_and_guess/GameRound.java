@@ -1,13 +1,16 @@
 package org.mick.build_and_guess;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,9 +26,6 @@ public class GameRound extends BukkitRunnable {
     public GameRound(Build_and_guess plugin) throws SQLException, ClassNotFoundException {
         this.plugin = plugin;
         readFile();
-//        Connection connection = null;
-//        Class.forName("org.sqlite.JDBC");
-//        connection = DriverManager.getConnection("jdbc:sqlite:test.db");
     }
 
     public void readFile() {
@@ -61,7 +61,23 @@ public class GameRound extends BukkitRunnable {
         } while (guessed_word.contains(guess_word));
         guessed_word.add(guess_word);
         this.plugin.chatHandler.setGuessWord(guess_word);
-        this.plugin.commandExecutor("msg @p[tag=building] " + "Guess word: " + guess_word);
+        this.plugin.commandExecutor("msg @a[tag=building] " + "Guess word: " + guess_word);
+    }
+
+    private void setActionBar() {
+        for(Player player : this.plugin.server.getOnlinePlayers()) {
+            String actionBarMsg = "";
+            Set<String> tags =  player.getScoreboardTags();
+            if(tags.contains("building") || tags.contains("correct_guessed")) {
+                actionBarMsg = this.plugin.chatHandler.guessWord;
+            }
+            if (!tags.contains("building")) {
+                actionBarMsg = this.plugin.chatHandler.unguess_word;
+            }
+            TextComponent textComponent = new TextComponent(actionBarMsg);
+            textComponent.setColor(ChatColor.AQUA);
+            player.sendMessage(ChatMessageType.ACTION_BAR, textComponent);
+        }
     }
 
     @Override
@@ -70,17 +86,29 @@ public class GameRound extends BukkitRunnable {
             if(havePrint) havePrint = false;
             int timeLeft = this.plugin.chatHandler.getTimeLeft();
             if(timeLeft == 2399) {
+                plugin.chatHandler.guess_stop = false;
                 plugin.chatHandler.guessCounter = 0;
                 setGuessWord();
             } else if (timeLeft > 0) {
-                this.plugin.commandExecutor("title @p[tag=building] actionbar {\"text\":\"" + this.plugin.chatHandler.guessWord + "\",\"bold\":true}");
-                this.plugin.commandExecutor("title @p[tag=correct_guessed] actionbar {\"text\":\"" + this.plugin.chatHandler.guessWord + "\",\"bold\":true}");
-                this.plugin.commandExecutor("title @p[tag=!building] actionbar {\"text\":\"" + this.plugin.chatHandler.unguess_word + "\",\"bold\":true}");
+                setActionBar();
                 if (timeLeft == 290) {
                     this.plugin.chatHandler.showRandomWord();
                 }
                 if (timeLeft < 2000 && this.plugin.chatHandler.haveGuessCount == 0) {
                     this.plugin.chatHandler.showRandomWord();
+                }
+                if (timeLeft == 60 || timeLeft == 40 || timeLeft == 20) {
+                    if(!plugin.chatHandler.guess_stop) {
+                        this.plugin.chatHandler.commandExecutor("execute run playsound minecraft:block.stone_button.click_on voice @a ~ ~ ~");
+                        for(Player player : this.plugin.server.getOnlinePlayers()) {
+                            player.sendMessage(Component.text("剩余" + (timeLeft / 20) + "秒").color(TextColor.color(0xE2740E)));
+                        }
+                    }
+                }
+                if (timeLeft == 1 && !plugin.chatHandler.guess_stop) {
+                    plugin.chatHandler.guess_stop = true;
+                    this.plugin.commandExecutor("scoreboard players set time_left building_and_guessing_time_left 60");
+                    this.plugin.commandExecutor("title @a title [{\"text\":\"" + this.plugin.chatHandler.guessWord + "\",\"color\":\"white\",\"bold\":false}]");
                 }
             }
         }

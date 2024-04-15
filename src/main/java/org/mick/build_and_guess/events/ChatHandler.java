@@ -1,5 +1,8 @@
 package org.mick.build_and_guess.events;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+
 import org.bukkit.Server;
 import org.bukkit.command.CommandException;
 import org.bukkit.entity.Player;
@@ -16,6 +19,7 @@ import java.util.logging.Logger;
 public class ChatHandler implements Listener {
 
     private volatile boolean chatEnabled = true;
+    public boolean guess_stop = false;
     private final Logger logger;
     private final Server server;
     private final Build_and_guess plugin;
@@ -25,10 +29,10 @@ public class ChatHandler implements Listener {
     public int haveGuessCount = 0;
     public String unguess_word = "";
 
-    public ChatHandler(Logger logger, Server server, Build_and_guess plugin) {
-        this.logger = logger;
-        this.server = server;
+    public ChatHandler(Build_and_guess plugin) {
         this.plugin = plugin;
+        this.logger = plugin.getLogger();
+        this.server = plugin.getServer();
     }
 
     public void commandExecutor(String command) throws CommandException {
@@ -66,7 +70,7 @@ public class ChatHandler implements Listener {
             event.setCancelled(true);
         } else {
             if(this.plugin.inGame) {
-                if(message.equals(guessWord)) {
+                if(message.equals(guessWord) && !guess_stop) {
                     commandExecutor("tag " + name + " add correct_guess");
 
                     if(guessCounter < 4) {
@@ -77,14 +81,17 @@ public class ChatHandler implements Listener {
                     if(guessCounter >= server.getOnlinePlayers().size() - 1) {
                         commandExecutor("scoreboard players set time_left building_and_guessing_time_left 60");
                     }
-                    event.setMessage("猜中了！");
+                    for(Player player : server.getOnlinePlayers()) {
+                        player.sendMessage(Component.text(name+" 猜中了！").color(TextColor.color(0xE2DE18)));
+                    }
+                    event.setCancelled(true);
                 }
             }
         }
     }
 
     public void showRandomWord() {
-        if(haveGuessCount < unguess_word.length()) {
+        if(haveGuessCount < unguess_word.length() - 1) {
             int index = (int)(Math.random() * unguess_word.length());
             char[] unguess_word_array = unguess_word.toCharArray();
             unguess_word_array[index] = guessWord.charAt(index);

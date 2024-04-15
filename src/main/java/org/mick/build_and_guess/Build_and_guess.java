@@ -8,10 +8,10 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.mick.build_and_guess.events.ChatHandler;
-import org.mick.build_and_guess.events.CommandWatcher;
 import org.bukkit.command.CommandException;
+import org.mick.build_and_guess.events.CommandWatcher;
+import org.mick.build_and_guess.events.PlayerJoinHandler;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 public final class Build_and_guess extends JavaPlugin {
 
     public ChatHandler chatHandler;
+    public PlayerJoinHandler playerJoinHandler;
     public CommandWatcher commandWatcher;
     public Server server = this.getServer();
     public Logger logger = this.getLogger();
@@ -39,11 +40,13 @@ public final class Build_and_guess extends JavaPlugin {
         // Plugin startup logic
 
         // 初始化参数
-        chatHandler = new ChatHandler(logger, server, this);
-        commandWatcher = new CommandWatcher(logger, server);
+        chatHandler = new ChatHandler(this);
+        playerJoinHandler = new PlayerJoinHandler(this);
+        commandWatcher = new CommandWatcher(this);
 
         // 注册指令事件
         Bukkit.getPluginManager().registerEvents(chatHandler, this);
+        Bukkit.getPluginManager().registerEvents(playerJoinHandler, this);
         Bukkit.getPluginManager().registerEvents(commandWatcher, this);
 
         Objects.requireNonNull(this.getCommand("chat_manger")).setExecutor(this);

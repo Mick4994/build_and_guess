@@ -21,9 +21,10 @@ public class CommandWatcher implements Listener {
     public void onServerCommandEvent(PlayerCommandPreprocessEvent event) {
         String commandLine = event.getMessage();
         Player player = event.getPlayer();
-        Component component = Component.text("NO way to tell other player")
+        Component component = Component.text("NO way to whisper answer to other player")
                 .color(TextColor.color(0xE21611));
-        if(commandLine.startsWith("/msg") && this.plugin.inGame) {
+        if((commandLine.startsWith("/msg") || commandLine.startsWith("/tell"))
+                && this.plugin.inGame) {
             event.setCancelled(true);
             player.sendMessage(component);
         }

@@ -5,6 +5,7 @@ import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.mick.build_and_guess.events.ChatHandler;
@@ -24,6 +25,7 @@ public final class Build_and_guess extends JavaPlugin {
     public Server server = this.getServer();
     public Logger logger = this.getLogger();
     public boolean inGame = false;
+    public FileConfiguration config = this.getConfig();
 
     /**
      * 指令执行器: 对终端指令执行入口进行的封装
@@ -38,6 +40,9 @@ public final class Build_and_guess extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
+        config.addDefault("game_time", 3600);
+        config.options().copyDefaults(true);
+        saveConfig();
 
         // 初始化参数
         chatHandler = new ChatHandler(this);
@@ -51,11 +56,7 @@ public final class Build_and_guess extends JavaPlugin {
 
         Objects.requireNonNull(this.getCommand("chat_manger")).setExecutor(this);
 
-        try {
-            new GameRound(this).runTaskTimer(this, 0, 0);
-        } catch (SQLException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        new GameRound(this).runTaskTimer(this, 0, 0);
     }
 
     /**
@@ -109,7 +110,7 @@ public final class Build_and_guess extends JavaPlugin {
                 return false;
             }
 
-            boolean success = commandExecutor("function building_and_guessing:start");
+            boolean success = commandExecutor("function building_and_guessing:start {game_time:" + config.getInt("game_time") + "}");
             if(success) {
                 inGame = true;
                 logger.info("game start!");
@@ -120,9 +121,14 @@ public final class Build_and_guess extends JavaPlugin {
             return false;
         }
 
-        if(label.equalsIgnoreCase("left")){
+        if(label.equalsIgnoreCase("left") && sender.isOp()){
             if (args.length != 1) {
                 sender.sendMessage("error args num");
+                return false;
+            }
+
+            if(!inGame) {
+                sender.sendMessage("must in game!");
                 return false;
             }
 
@@ -133,6 +139,22 @@ public final class Build_and_guess extends JavaPlugin {
                 sender.sendMessage(msg);
                 return true;
             }
+        }
+
+        if(label.equalsIgnoreCase("game_time") && sender.isOp()) {
+            if (args.length != 1) {
+                sender.sendMessage("error args num");
+                return false;
+            }
+
+            config.set("game_time", Integer.valueOf(args[0]));
+            config.options().copyDefaults(true);
+            saveConfig();
+
+            String msg = "set game_time to " + args[0];
+            logger.info(msg);
+            sender.sendMessage(msg);
+            return true;
         }
 
         logger.info("Unknown command" + command.getName());

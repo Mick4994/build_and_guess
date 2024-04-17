@@ -7,11 +7,11 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.Sound;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,11 +19,15 @@ import java.util.Set;
 public class GameRound extends BukkitRunnable {
 
     private Build_and_guess plugin;
-    private boolean havePrint = false;
+    private boolean havePrintGameOver = false;
     private Set<String> guessed_word = new HashSet<String>();
-    private ArrayList<String> all_word = new ArrayList<String>();;
+    private ArrayList<Integer> countDownArray = new ArrayList<Integer>();
+    private ArrayList<String> all_word = new ArrayList<String>();
 
-    public GameRound(Build_and_guess plugin) throws SQLException, ClassNotFoundException {
+    public GameRound(Build_and_guess plugin) {
+        for (int i = 0; i < 5 * 20; i += 20) {
+            countDownArray.add(i + 20);
+        }
         this.plugin = plugin;
         readFile();
     }
@@ -82,45 +86,77 @@ public class GameRound extends BukkitRunnable {
 
     @Override
     public void run() {
+
+        // 进入游戏状态后
         if(plugin.inGame) {
-            if(havePrint) havePrint = false;
+
+            // 恢复上一局结束日志锁
+            if(havePrintGameOver) havePrintGameOver = false;
+
+            // 加载实时剩余时间
             int timeLeft = this.plugin.chatHandler.getTimeLeft();
-            if(timeLeft == 2399) {
+            int game_time = this.plugin.config.getInt("game_time");
+
+            // 游戏开始时初始化状态和发送猜词
+            if(timeLeft == game_time) {
                 plugin.chatHandler.guess_stop = false;
                 plugin.chatHandler.guessCounter = 0;
                 setGuessWord();
+
+            // 进入本轮猜猜乐游戏
             } else if (timeLeft > 0) {
                 setActionBar();
+
+                // 在不暴露原词情况下最后再给一个字
                 if (timeLeft == 290) {
                     this.plugin.chatHandler.showRandomWord();
                 }
-                if (timeLeft < 2000 && this.plugin.chatHandler.haveGuessCount == 0) {
+
+                // 开始给提示字的时刻
+                int first_word_time;
+                if (this.plugin.chatHandler.guessCounter > 2) {
+                    first_word_time = game_time * 2 / 3;
+                } else {
+                    first_word_time = game_time / 2;
+                }
+                if (timeLeft < first_word_time && this.plugin.chatHandler.haveGuessCount == 0) {
                     this.plugin.chatHandler.showRandomWord();
                 }
-                if (timeLeft == 60 || timeLeft == 40 || timeLeft == 20) {
-                    if(!plugin.chatHandler.guess_stop) {
-                        this.plugin.chatHandler.commandExecutor("execute run playsound minecraft:block.stone_button.click_on voice @a ~ ~ ~");
-                        for(Player player : this.plugin.server.getOnlinePlayers()) {
-                            player.sendMessage(Component.text("剩余" + (timeLeft / 20) + "秒").color(TextColor.color(0xE2740E)));
-                        }
+
+                // 倒计时时间
+                if (countDownArray.contains(timeLeft) && !plugin.chatHandler.guess_stop) {
+                    for(Player player : this.plugin.server.getOnlinePlayers()) {
+                        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1F, 1F);
+                        player.sendMessage(Component.text("剩余" + (timeLeft / 20) + "秒").color(TextColor.color(0xE2740E)));
                     }
                 }
+
+                // 结束展示本轮猜词
                 if (timeLeft == 1 && !plugin.chatHandler.guess_stop) {
                     plugin.chatHandler.guess_stop = true;
                     this.plugin.commandExecutor("scoreboard players set time_left building_and_guessing_time_left 60");
                     this.plugin.commandExecutor("title @a title [{\"text\":\"" + this.plugin.chatHandler.guessWord + "\",\"color\":\"white\",\"bold\":false}]");
+                    for(Player player : this.plugin.server.getOnlinePlayers()) {
+                        player.playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1F, 1F);
+                    }
                 }
             }
         }
 
         // 当游戏正常结束，或者出现所有人同时掉线，还是因其他原因退到没人时执行
         if(this.plugin.server.getOnlinePlayers().isEmpty() || haveGameOver()) {
-            if(!havePrint) {
-                havePrint = true;
+
+            // 日志锁，打印一次游戏结束后上锁，等待退出的时间将不再触发打印
+            if(!havePrintGameOver) {
+                havePrintGameOver = true;
                 this.plugin.logger.info("game over!");
             }
+
+            // 一整局游戏结束清理状态
             guessed_word.clear();
             plugin.inGame = false;
+
+            // ....本插件该局游戏的程序代码结束，等待数据包加载退出游戏，并将所有人传送到大厅
         }
     }
 }

@@ -15,3 +15,7 @@ commands:
   left:
     description: 调整剩余时间
     usage: /<command>
+
+  game_time:
+    description: 调整单局时间
+    usage: /<command>

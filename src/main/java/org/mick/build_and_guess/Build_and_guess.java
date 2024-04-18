@@ -1,5 +1,7 @@
 package org.mick.build_and_guess;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -121,7 +123,14 @@ public final class Build_and_guess extends JavaPlugin {
             return false;
         }
 
-        if(label.equalsIgnoreCase("left") && sender.isOp()){
+        if(label.equalsIgnoreCase("left")){
+            if (!sender.isOp()) {
+                Component component = Component.text("only op can use")
+                        .color(TextColor.color(0xE21611));
+                sender.sendMessage(component);
+                return false;
+            }
+
             if (args.length != 1) {
                 sender.sendMessage("error args num");
                 return false;
@@ -141,7 +150,14 @@ public final class Build_and_guess extends JavaPlugin {
             }
         }
 
-        if(label.equalsIgnoreCase("game_time") && sender.isOp()) {
+        if(label.equalsIgnoreCase("game_time")) {
+            if (!sender.isOp()) {
+                Component component = Component.text("only op can use")
+                        .color(TextColor.color(0xE21611));
+                sender.sendMessage(component);
+                return false;
+            }
+
             if (args.length != 1) {
                 sender.sendMessage("error args num");
                 return false;

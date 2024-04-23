@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.mick.build_and_guess.events.ChatHandler;
 import org.bukkit.command.CommandException;
 import org.mick.build_and_guess.events.CommandWatcher;
+import org.mick.build_and_guess.events.FieldProtector;
 import org.mick.build_and_guess.events.PlayerJoinHandler;
 
 import java.sql.SQLException;
@@ -24,6 +25,7 @@ public final class Build_and_guess extends JavaPlugin {
     public ChatHandler chatHandler;
     public PlayerJoinHandler playerJoinHandler;
     public CommandWatcher commandWatcher;
+    public FieldProtector fieldProtector;
     public Server server = this.getServer();
     public Logger logger = this.getLogger();
     public boolean inGame = false;
@@ -50,11 +52,13 @@ public final class Build_and_guess extends JavaPlugin {
         chatHandler = new ChatHandler(this);
         playerJoinHandler = new PlayerJoinHandler(this);
         commandWatcher = new CommandWatcher(this);
+        fieldProtector = new FieldProtector();
 
         // 注册指令事件
         Bukkit.getPluginManager().registerEvents(chatHandler, this);
         Bukkit.getPluginManager().registerEvents(playerJoinHandler, this);
         Bukkit.getPluginManager().registerEvents(commandWatcher, this);
+        Bukkit.getPluginManager().registerEvents(fieldProtector, this);
 
         Objects.requireNonNull(this.getCommand("chat_manger")).setExecutor(this);
 

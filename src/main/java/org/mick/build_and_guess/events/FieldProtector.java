@@ -5,10 +5,17 @@ import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
+import org.mick.build_and_guess.Build_and_guess;
 
 public class FieldProtector implements Listener {
 
     private final int[] grep = {56, 34, 26, 4, -4, -26, -34, -56};
+
+    private Build_and_guess plugin;
+
+    public FieldProtector(Build_and_guess plugin) {
+        this.plugin = plugin;
+    }
 
     private boolean needCancelled(Block cancelledBlock) {
         Location blockLocation = cancelledBlock.getLocation();
@@ -26,7 +33,7 @@ public class FieldProtector implements Listener {
                 }
             }
         }
-        return true;
+        return plugin.inGame;
     }
 
     // 方块破坏

@@ -52,7 +52,7 @@ public final class Build_and_guess extends JavaPlugin {
         chatHandler = new ChatHandler(this);
         playerJoinHandler = new PlayerJoinHandler(this);
         commandWatcher = new CommandWatcher(this);
-        fieldProtector = new FieldProtector();
+        fieldProtector = new FieldProtector(this);
 
         // 注册指令事件
         Bukkit.getPluginManager().registerEvents(chatHandler, this);
@@ -120,6 +120,7 @@ public final class Build_and_guess extends JavaPlugin {
             if(success) {
                 inGame = true;
                 logger.info("game start!");
+                server.sendMessage(Component.text("游戏开始！").color(TextColor.color(0xE21E11)));
                 return true;
             } else {
                 sender.sendMessage("start failed, please check start function");

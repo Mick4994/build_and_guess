@@ -19,6 +19,7 @@ import java.util.Set;
 public class GameRound extends BukkitRunnable {
 
     private Build_and_guess plugin;
+    private int episode;
     private boolean havePrintGameOver = false;
     private Set<String> guessed_word = new HashSet<String>();
     private ArrayList<Integer> countDownArray = new ArrayList<Integer>();
@@ -28,6 +29,7 @@ public class GameRound extends BukkitRunnable {
         for (int i = 0; i < 5 * 20; i += 20) {
             countDownArray.add(i + 20);
         }
+        this.episode = 0;
         this.plugin = plugin;
         readFile();
     }
@@ -44,7 +46,8 @@ public class GameRound extends BukkitRunnable {
                 // 一次读入一行数据
                 all_word.add(line);
             }
-            this.plugin.logger.info(all_word.toString());
+            this.plugin.logger.info("have loaded all words!");
+//            this.plugin.logger.info(all_word.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -75,7 +78,7 @@ public class GameRound extends BukkitRunnable {
             if(tags.contains("building") || tags.contains("correct_guessed")) {
                 actionBarMsg = this.plugin.chatHandler.guessWord;
             }
-            if (!tags.contains("building")) {
+            if (!tags.contains("building") && !tags.contains("correct_guessed")) {
                 actionBarMsg = this.plugin.chatHandler.unguess_word;
             }
             TextComponent textComponent = new TextComponent(actionBarMsg);
@@ -100,7 +103,9 @@ public class GameRound extends BukkitRunnable {
             // 游戏开始时初始化状态和发送猜词
             if(timeLeft == game_time) {
                 plugin.chatHandler.guess_stop = false;
+                plugin.chatHandler.enough_stop = false;
                 plugin.chatHandler.guessCounter = 0;
+                plugin.server.sendMessage(Component.text("第" + (episode+1) + "回合开始，请猜词吧！").color(TextColor.color(0xE2E2DF)));
                 setGuessWord();
 
             // 进入本轮猜猜乐游戏
@@ -124,7 +129,7 @@ public class GameRound extends BukkitRunnable {
                 }
 
                 // 倒计时时间
-                if (countDownArray.contains(timeLeft) && !plugin.chatHandler.guess_stop) {
+                if (countDownArray.contains(timeLeft) && !plugin.chatHandler.guess_stop && !plugin.chatHandler.enough_stop) {
                     for(Player player : this.plugin.server.getOnlinePlayers()) {
                         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1F, 1F);
                         player.sendMessage(Component.text("剩余" + (timeLeft / 20) + "秒").color(TextColor.color(0xE2740E)));
@@ -134,8 +139,15 @@ public class GameRound extends BukkitRunnable {
                 // 结束展示本轮猜词
                 if (timeLeft == 1 && !plugin.chatHandler.guess_stop) {
                     plugin.chatHandler.guess_stop = true;
+                    // 更新整轮游戏数据
+                    this.episode += 1;
+                    int episodeNum = this.plugin.server.getOnlinePlayers().size();
+                    String bigTitle = "公布第"+episode+"/"+episodeNum+"回合答案";
+
                     this.plugin.commandExecutor("scoreboard players set time_left building_and_guessing_time_left 60");
-                    this.plugin.commandExecutor("title @a title [{\"text\":\"" + this.plugin.chatHandler.guessWord + "\",\"color\":\"white\",\"bold\":false}]");
+                    this.plugin.commandExecutor("title @a title [{\"text\":\"" + bigTitle + "\",\"color\":\"white\",\"bold\":false}]");
+                    this.plugin.commandExecutor("title @a subtitle [{\"text\":\"" + this.plugin.chatHandler.guessWord + "\",\"color\":\"yellow\",\"bold\":false}]");
+                    this.plugin.server.broadcast(Component.text(bigTitle + "：" + this.plugin.chatHandler.guessWord).color(TextColor.color(0xE2711B)));
                     for(Player player : this.plugin.server.getOnlinePlayers()) {
                         player.playSound(player.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1F, 1F);
                     }
@@ -153,6 +165,7 @@ public class GameRound extends BukkitRunnable {
             }
 
             // 一整局游戏结束清理状态
+            episode = 0;
             guessed_word.clear();
             plugin.inGame = false;
 
